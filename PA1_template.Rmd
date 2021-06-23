@@ -5,21 +5,187 @@ output:
     keep_md: true
 ---
 
+This file gives an overview of data manipulation, exploration, and charting
+for the Coursera Reproducible Research week 2 course project.  
+
+
+## Loading required libraries
+
+First, load the required libraries readr (for loading csv data file as tibble),
+dplyr (for data manipulation functions), and ggplot2 (for graphing).
+
+```{r load_libraries, echo = TRUE, message = FALSE}
+library(readr)
+library(dplyr)
+library(ggplot2)
+```  
+
 
 ## Loading and preprocessing the data
 
+Unzip the included data file, activity.zip, and save the csv contained within
+to a new directory called "data". Load the csv file to a new tibble object.
+
+```{r load_data, echo = TRUE}
+if(!file.exists("./data")){dir.create("./data")}
+unzip("activity.zip", exdir="./data")
+activity <- read_csv("./data/activity.csv")
+```  
 
 
 ## What is mean total number of steps taken per day?
 
+Use dplyr to summarize steps data by date. Then, with ggplot2, create a histogram of steps per day.
+
+```{r daily_steps_hist, echo = TRUE, fig.height = 3}
+activity %>%
+    filter(!is.na(steps)) %>%
+    group_by(date) %>%
+    summarize(steps_total = sum(steps)) %>%
+    ggplot(mapping = aes(x = steps_total)) +
+        geom_histogram(binwidth = 1000, 
+                       fill = "indianred1", color = "indianred4") + 
+        theme_bw() +
+        labs(title = "Total Steps per Day", x = "Steps", y = "Count")
+```  
+
+
+Calculate the mean and median total number of steps taken per day.
+
+```{r steps_summaries, echo = TRUE, results = "hide"}
+temp <- activity %>%
+    filter(!is.na(steps)) %>%
+    group_by(date) %>%
+    summarize(steps_total = sum(steps))
+
+steps_total_mean = format(mean(temp$steps_total), scientific = FALSE)
+steps_total_median = format(median(temp$steps_total), scientific = FALSE)
+```  
+
+
+The mean steps per day is **`r steps_total_mean`**, and the median steps per day is **`r steps_total_median`**.
 
 
 ## What is the average daily activity pattern?
 
+Create a time series plot with the avg. number of steps taken by interval,
+averaged across all days.
 
+```{r interval_steps_timeseries, echo = TRUE, fig.height = 3}
+activity %>%
+    filter(!is.na(steps)) %>%
+    group_by(interval) %>%
+    summarize(steps_mean = mean(steps)) %>%
+    ggplot(mapping = aes(x = interval, y = steps_mean)) +
+        geom_line(color = "indianred4", size = 0.5) + 
+        theme_bw() +
+        labs(title = "Avg. Steps per Time Interval",
+             x = "Interval", y = "Avg. Steps")
+```
+  
+Calculate the interval with the maximum avg. number of steps.
+
+```{r interval_steps_max, echo = TRUE, fig.height = 3}
+temp <- activity %>%
+    filter(!is.na(steps)) %>%
+    group_by(interval) %>%
+    summarize(steps_mean = mean(steps))
+
+interval_max = temp$interval[which.max(temp$steps_mean)]
+```  
+
+
+The 5-minute interval with the max avg. number of steps is **`r interval_max` to
+`r interval_max + 4`**.  
 
 ## Imputing missing values
 
+Compute the number of missing steps values in the dataset.
+
+```{r missing_vals, echo = TRUE}
+missing_steps = sum(is.na(activity$steps))
+```  
+
+
+There are **`r missing_steps`** missing steps values.  
+
+
+Fill in the missing values using the mean for each 5-minute interval, by 
+computing the mean for each interval (among non-missing values) and filling
+that in for any missing values. Create a new dataset with the missing data filled in.
+
+```{r fill_missing_vals, echo = TRUE}
+activity_imputed <- activity %>%
+    group_by(interval) %>%
+    mutate(steps_interval_mean = mean(steps, na.rm = TRUE)) %>%
+    ungroup() %>%
+    mutate(steps = case_when(is.na(steps) ~ steps_interval_mean,
+                             !is.na(steps) ~ steps)) %>%
+    select(-steps_interval_mean)
+```  
+
+
+Create a histogram of the number of steps taken each day using the imputed 
+dataset, and calculate the mean and median total number of steps per day.
+
+```{r daily_steps_imputed_hist, echo = TRUE, fig.height = 3}
+temp <- activity_imputed %>%
+    group_by(date) %>%
+    summarize(steps_total = sum(steps))
+
+temp %>%
+    ggplot(mapping = aes(x = steps_total)) +
+        geom_histogram(binwidth = 1000, 
+                       fill = "indianred1", color = "indianred4") + 
+        theme_bw() +
+        labs(title = "Total Steps per Day (NA's Imputed)",
+             x = "Steps", y = "Count")
+
+steps_total_mean = format(mean(temp$steps_total), scientific = FALSE)
+steps_total_median = format(median(temp$steps_total), scientific = FALSE)
+```
+  
+
+The mean steps per day is **`r steps_total_mean`**, and the median steps per day is **`r steps_total_median`**. 
+
+The mean steps per day does not differ from the unimputed/original data. The
+median steps per day increases slightly, and is now equal to the mean steps
+per day.  
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+Create a new factor variable indicating whether a given date is a weekday or
+a weekend. Then make a time series plot showing the avg. number of steps taken
+per 5-minute interval, with panels for weekday avg. and weekend avg.,
+respectively.
+
+```{r weekday_weekend, echo = TRUE}
+activity_imputed <- activity_imputed %>%
+    mutate(daytype = as.factor(
+           case_when(weekdays(date) == "Monday" ~ "weekday",
+                     weekdays(date) == "Tuesday" ~ "weekday",
+                     weekdays(date) == "Wednesday" ~ "weekday",
+                     weekdays(date) == "Thursday" ~ "weekday",
+                     weekdays(date) == "Friday" ~ "weekday",
+                     weekdays(date) == "Saturday" ~ "weekend",
+                     weekdays(date) == "Sunday" ~ "weekend")))
+```
+
+```{r weekday_weekend_time_series, echo = TRUE, fig.height = 4}
+options(dplyr.summarise.inform = FALSE)
+
+activity_imputed %>%
+    group_by(daytype, interval) %>%
+    summarize(steps_mean = mean(steps)) %>%
+    ggplot(mapping = aes(x = interval, y = steps_mean)) +
+        geom_line(size = 0.5, color = "indianred4") + 
+        facet_wrap( ~ daytype, nrow = 2) +
+        theme_bw() +
+        theme(title = element_text(size = rel(0.9))) +
+        labs(title = "Avg. Steps per Time Interval (weekday vs. weekend)",
+             x = "Interval", y = "Avg. Steps")
+```
+
+
+
