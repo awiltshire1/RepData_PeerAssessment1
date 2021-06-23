@@ -59,7 +59,7 @@ activity %>%
         geom_histogram(binwidth = 1000, 
                        fill = "indianred1", color = "indianred4") + 
         theme_bw() +
-        labs(title = "Total Steps per Day", x = "Steps", y = "Count")
+        labs(title = "Total Steps Per Day", x = "Steps", y = "Count")
 ```
 
 ![plot of chunk daily_steps_hist](figure/daily_steps_hist-1.png)
@@ -96,7 +96,7 @@ activity %>%
     ggplot(mapping = aes(x = interval, y = steps_mean)) +
         geom_line(color = "indianred4", size = 0.5) + 
         theme_bw() +
-        labs(title = "Avg. Steps per Time Interval",
+        labs(title = "Avg. Steps Per Time Interval",
              x = "Interval", y = "Avg. Steps")
 ```
 
@@ -161,7 +161,7 @@ temp %>%
         geom_histogram(binwidth = 1000, 
                        fill = "indianred1", color = "indianred4") + 
         theme_bw() +
-        labs(title = "Total Steps per Day (NA's Imputed)",
+        labs(title = "Total Steps Per Day (NAs Imputed)",
              x = "Steps", y = "Count")
 ```
 
@@ -211,8 +211,8 @@ activity_imputed %>%
         geom_line(size = 0.5, color = "indianred4") + 
         facet_wrap( ~ daytype, nrow = 2) +
         theme_bw() +
-        theme(title = element_text(size = rel(0.9))) +
-        labs(title = "Avg. Steps per Time Interval (weekday vs. weekend)",
+        theme(title = element_text(size = rel(0.85))) +
+        labs(title = "Avg. Steps Per Time Interval (weekday vs. weekend)",
              x = "Interval", y = "Avg. Steps")
 ```
 
