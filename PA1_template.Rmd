@@ -58,8 +58,8 @@ temp <- activity %>%
     group_by(date) %>%
     summarize(steps_total = sum(steps))
 
-steps_total_mean = format(mean(temp$steps_total), scientific = FALSE)
-steps_total_median = format(median(temp$steps_total), scientific = FALSE)
+steps_total_mean <- format(mean(temp$steps_total), scientific = FALSE)
+steps_total_median <- format(median(temp$steps_total), scientific = FALSE)
 ```  
 
 
@@ -91,7 +91,7 @@ temp <- activity %>%
     group_by(interval) %>%
     summarize(steps_mean = mean(steps))
 
-interval_max = temp$interval[which.max(temp$steps_mean)]
+interval_max <- temp$interval[which.max(temp$steps_mean)]
 ```  
 
 
@@ -103,7 +103,7 @@ The 5-minute interval with the max avg. number of steps is **`r interval_max` to
 Compute the number of missing steps values in the dataset.
 
 ```{r missing_vals, echo = TRUE}
-missing_steps = sum(is.na(activity$steps))
+missing_steps <- sum(is.na(activity$steps))
 ```  
 
 
@@ -141,8 +141,8 @@ temp %>%
         labs(title = "Total Steps per Day (NA's Imputed)",
              x = "Steps", y = "Count")
 
-steps_total_mean = format(mean(temp$steps_total), scientific = FALSE)
-steps_total_median = format(median(temp$steps_total), scientific = FALSE)
+steps_total_mean <- format(mean(temp$steps_total), scientific = FALSE)
+steps_total_median <- format(median(temp$steps_total), scientific = FALSE)
 ```
   
 
